@@ -1,9 +1,12 @@
 const express = require("express");
 
 const router = express.Router();
+// const { textSanitaze } = require("../middleware/textSanitaze");
 
-const { getLogin } = require("../controllers/user");
+const { register, login } = require("../controllers/auth");
 
-router.post("/login", getLogin);
+// Loginregister
+router.post("/login", login);
+router.post("/register", register);
 
 module.exports = router;
