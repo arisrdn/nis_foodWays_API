@@ -149,37 +149,37 @@ exports.register = async (req, res) => {
 	}
 };
 
-let todos = [
-	{
-		id: 1,
-		title: "Belajar Express",
-		isDone: false,
-	},
-	{
-		id: 2,
-		title: "Belajar Node.js",
-		isDone: true,
-	},
-];
+// let todos = [
+// 	{
+// 		id: 1,
+// 		title: "Belajar Express",
+// 		isDone: false,
+// 	},
+// 	{
+// 		id: 2,
+// 		title: "Belajar Node.js",
+// 		isDone: true,
+// 	},
+// ];
 
-exports.register1 = (req, res) => {
-	console.log("email=", req.body);
-	console.log("secret kode ", process.env.SECRET_KEY);
-	res.send({
-		status: "success",
-		message: "Todo Succesfully Get",
-		data: {
-			todos,
-		},
-	});
-};
+// exports.register1 = (req, res) => {
+// 	console.log("email=", req.body);
+// 	console.log("secret kode ", process.env.SECRET_KEY);
+// 	res.send({
+// 		status: "success",
+// 		message: "Todo Succesfully Get",
+// 		data: {
+// 			todos,
+// 		},
+// 	});
+// };
 
-exports.login1 = (req, res) => {
-	res.send({
-		status: "success",
-		message: "Todo Succesfully Get",
-		data: {
-			todos,
-		},
-	});
-};
+// exports.login1 = (req, res) => {
+// 	res.send({
+// 		status: "success",
+// 		message: "Todo Succesfully Get",
+// 		data: {
+// 			todos,
+// 		},
+// 	});
+// };

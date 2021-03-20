@@ -77,25 +77,31 @@ exports.getLogin = async (req, res) => {
 	}
 };
 
-let todos = [
-	{
-		id: 1,
-		title: "Belajar Express",
-		isDone: false,
-	},
-	{
-		id: 2,
-		title: "Belajar Node.js",
-		isDone: true,
-	},
-];
-
-exports.getTodo = (req, res) => {
-	res.send({
-		status: "success",
-		message: "Todo Succesfully Get",
-		data: {
-			todos,
-		},
-	});
+exports.getUsers = async (req, res) => {
+	try {
+		const users = await User.findAll({
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "password"],
+			},
+		});
+		res.send({
+			status: "success",
+			message: "Users Succesfully Get",
+			data: {
+				users,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
 };
+
+exports.getDetaillUser = async (req, res) => {};
+
+exports.updateUser = async (req, res) => {};
+
+exports.deleteUser = async (req, res) => {};
