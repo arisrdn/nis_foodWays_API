@@ -1,6 +1,7 @@
 const { User } = require("../../models/");
 const Sanitasi = require("../middleware/textSanitaze");
 const Joi = require("joi");
+const { login } = require("./auth");
 
 exports.getLogin = async (req, res) => {
 	try {
@@ -100,8 +101,90 @@ exports.getUsers = async (req, res) => {
 	}
 };
 
-exports.getDetaillUser = async (req, res) => {};
+exports.getDetailUser = async (req, res) => {
+	try {
+		console.log("chek id", req.userId);
+		const users = await User.findOne({
+			where: {
+				id: req.userId.id,
+			},
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "password"],
+			},
+		});
+		res.send({
+			status: "success",
+			message: "Users Succesfully Get",
+			data: {
+				users,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
 
-exports.updateUser = async (req, res) => {};
+exports.updateUser = async (req, res) => {
+	try {
+		const { body } = req;
+
+		console.log("isi body", body);
+		const schema = Joi.object({
+			email: Joi.string().email().min(10).max(50).required(),
+			fullName: Joi.string().required(),
+			phone: Joi.string().required(),
+			location: Joi.string().required(),
+		});
+
+		const { error } = schema.validate(req.body);
+		console.log("ok");
+		// if (error)
+		// 	return res.status(400).send({
+		// 		status: "validation failed",
+		// 		message: error.details[0].message,
+		// 	});
+		// if (req.files.imageFile === undefined) {
+		// 	image = "";
+		// } else {
+		// 	image = req.files.imageFile[0].filename;
+		// }
+
+		// const updatedUserId = await User.update(
+		// 	{ ...body },
+		// 	{
+		// 		where: {
+		// 			id: req.userId.id,
+		// 		},
+		// 	}
+		// );
+
+		const user = await User.findOne({
+			where: {
+				id: req.userId.id,
+			},
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "password"],
+			},
+		});
+
+		res.send({
+			status: "success",
+			message: "User Succesfully Updated",
+			data: {
+				user,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
 
 exports.deleteUser = async (req, res) => {};
