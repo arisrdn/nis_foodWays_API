@@ -8,7 +8,7 @@ dotenv.config();
 exports.login = async (req, res) => {
 	try {
 		const { email, password } = req.body;
-
+		// console.log("cek req", res.send);
 		//   validasi
 		const schema = Joi.object({
 			email: Joi.string().email().min(10).max(50).required(),
@@ -48,7 +48,6 @@ exports.login = async (req, res) => {
 			});
 		}
 
-		console.log(process.env.SECRET_KEY);
 		//   konfigurasi token
 		const secretKey = process.env.SECRET_KEY;
 		//   ubah id jadi token
@@ -58,13 +57,14 @@ exports.login = async (req, res) => {
 			},
 			secretKey
 		);
+		// console.log(token);
 
-		res.send({
+		res.status(200).send({
 			status: "success",
 			message: "Login Success",
 			data: {
 				user: {
-					name: checkEmail.name,
+					fullName: checkEmail.fullName,
 					email: checkEmail.email,
 					token,
 				},

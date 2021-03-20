@@ -1,5 +1,5 @@
 const { User } = require("../../models/");
-const Sanitasi = require("../middleware/Sanitasi");
+const Sanitasi = require("../middleware/textSanitaze");
 const Joi = require("joi");
 
 exports.getLogin = async (req, res) => {
