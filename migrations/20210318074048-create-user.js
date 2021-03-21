@@ -23,7 +23,7 @@ module.exports = {
 			phone: {
 				type: Sequelize.STRING,
 			},
-			type: {
+			role: {
 				type: Sequelize.STRING,
 			},
 			image: {

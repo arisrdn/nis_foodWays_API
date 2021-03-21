@@ -17,7 +17,8 @@ module.exports = {
 				{
 					id: 1,
 					email: "user1@gmail.com",
-					password: "ngacak123",
+					password:
+						"$2b$10$jncRbkq.Kj457EaNZka5f.Z5ZzSwbe26ItO.5KaBBW9mytYRHakgG",
 					fullName: "aris user",
 					gender: "male",
 					phone: "0876543215678",
@@ -30,7 +31,8 @@ module.exports = {
 				{
 					id: 2,
 					email: "user2@gmail.com",
-					password: "ngacak123",
+					password:
+						"$2b$10$jncRbkq.Kj457EaNZka5f.Z5ZzSwbe26ItO.5KaBBW9mytYRHakgG",
 					fullName: "aris partner",
 					gender: "male",
 					phone: "0876543215678",

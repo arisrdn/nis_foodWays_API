@@ -67,6 +67,7 @@ exports.login = async (req, res) => {
 				user: {
 					fullName: checkEmail.fullName,
 					email: checkEmail.email,
+					role: checkEmail.role,
 					token,
 				},
 			},
@@ -91,7 +92,7 @@ exports.register = async (req, res) => {
 			fullName: Joi.string().required(),
 			gender: Joi.string().required(),
 			phone: Joi.string().required(),
-			type: Joi.string().required(),
+			role: Joi.string().required(),
 		});
 
 		const { error } = schema.validate(req.body);
@@ -138,6 +139,7 @@ exports.register = async (req, res) => {
 				user: {
 					name: user.name,
 					email: user.email,
+					email: user.role,
 					token,
 				},
 			},

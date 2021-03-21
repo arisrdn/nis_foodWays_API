@@ -1,12 +1,28 @@
-const { Product } = require("../../models/");
+const { Product, User } = require("../../models/");
 const Joi = require("joi");
-const { login } = require("./auth");
 
-exports.getproducts = async (req, res) => {
+exports.getProducts = async (req, res) => {
 	try {
 		const products = await Product.findAll({
+			include: [
+				{
+					model: User,
+					as: "user",
+					attributes: {
+						exclude: [
+							"createdAt",
+							"updatedAt",
+							"UserId",
+							"role",
+							"password",
+							"image",
+							"gender",
+						],
+					},
+				},
+			],
 			attributes: {
-				exclude: ["createdAt", "updatedAt"],
+				exclude: ["createdAt", "updatedAt", "userId"],
 			},
 		});
 		res.send({
@@ -28,8 +44,77 @@ exports.getproducts = async (req, res) => {
 exports.getDetailProduct = async (req, res) => {
 	try {
 		const { id } = req.params;
-		console.log("chek id", req.userId);
+		// console.log("chek id", req.userId);
 		const product = await Product.findOne({
+			where: {
+				id,
+			},
+			include: [
+				{
+					model: User,
+					as: "user",
+					attributes: {
+						exclude: [
+							"createdAt",
+							"updatedAt",
+							"UserId",
+							"role",
+							"password",
+							"image",
+							"gender",
+						],
+					},
+				},
+			],
+			attributes: {
+				exclude: ["createdAt", "updatedAt"],
+			},
+		});
+		res.send({
+			status: "success",
+			message: "Product Succesfully Get",
+			data: {
+				product,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
+exports.getProductsUser = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const product = await Product.findAll({
+			where: {
+				userId: id,
+			},
+			attributes: {
+				exclude: ["createdAt", "updatedAt"],
+			},
+		});
+		res.send({
+			status: "success",
+			message: "Product Succesfully Get",
+			data: {
+				product,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
+exports.getProductsPartnerLogin = async (req, res) => {
+	try {
+		const id = req.userId.id;
+		const product = await Product.findAll({
 			where: {
 				id,
 			},
@@ -55,12 +140,9 @@ exports.getDetailProduct = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
 	try {
-		const { email, password } = req.body;
 		const schema = Joi.object({
-			fullName: Joi.string().required(),
-			gender: Joi.string().required(),
-			phone: Joi.string().required(),
-			type: Joi.string().required(),
+			tittle: Joi.string().required(),
+			price: Joi.required(),
 		});
 
 		const { error } = schema.validate(req.body);
@@ -71,20 +153,53 @@ exports.createProduct = async (req, res) => {
 				message: error.details[0].message,
 			});
 
-		const product = await User.create({
+		if (
+			req.files.imageFile == undefined ||
+			req.files.imageFile[0] == "undefined"
+		) {
+			return res.status(400).send({
+				status: "validation failed",
+				message: "Please select image to upload",
+			});
+		}
+		console.log("chek");
+
+		const productCrete = await Product.create({
 			...req.body,
 			userId: req.userId.id,
+			image: req.files.imageFile[0].filename,
 		});
 
+		const product = await Product.findOne({
+			where: {
+				id: productCrete.id,
+			},
+			include: [
+				{
+					model: User,
+					as: "user",
+					attributes: {
+						exclude: [
+							"createdAt",
+							"updatedAt",
+							"UserId",
+							"role",
+							"password",
+							"image",
+							"gender",
+						],
+					},
+				},
+			],
+			attributes: {
+				exclude: ["createdAt", "updatedAt"],
+			},
+		});
 		res.send({
 			status: "success",
 			message: "Product Successfully Added",
 			data: {
-				product: {
-					name: user.name,
-					email: user.email,
-					token,
-				},
+				product,
 			},
 		});
 	} catch (err) {
@@ -100,14 +215,11 @@ exports.updateProduct = async (req, res) => {
 	try {
 		const { body } = req;
 		const { id } = req.params;
-		await console.log("isi body", req.files);
+		// await console.log("isi body", req);
 
 		const schema = Joi.object({
-			email: Joi.string().email().min(10).max(50).required(),
-			fullName: Joi.string().required(),
-			phone: Joi.string().required(),
-			location: Joi.string().required(),
-			gender: Joi.string().required(),
+			tittle: Joi.string().required(),
+			price: Joi.required(),
 		});
 
 		const { error } = schema.validate(req.body);
@@ -118,23 +230,67 @@ exports.updateProduct = async (req, res) => {
 				message: error.details[0].message,
 			});
 
-		body.image = req.files.imageFile[0].filename;
+		if (
+			req.files.imageFile == undefined ||
+			req.files.imageFile[0] == "undefined"
+		) {
+		} else {
+			body.image = req.files.imageFile[0].filename;
+		}
 
-		await console.log("body", body);
-		await console.log("ok", req.userId);
-		const user = await Product.findOne({
+		const checkId = await Product.findOne({
 			where: {
-				id: req.userId.id,
+				id,
 			},
+		});
+
+		if (!checkId)
+			return res.send({
+				status: "success",
+				message: `Product with id: ${id} not found`,
+			});
+
+		const updateId = await Product.update(
+			{
+				...body,
+			},
+			{
+				where: {
+					id,
+				},
+			}
+		);
+
+		const product = await Product.findOne({
+			where: {
+				id,
+			},
+			include: [
+				{
+					model: User,
+					as: "user",
+					attributes: {
+						exclude: [
+							"createdAt",
+							"updatedAt",
+							"UserId",
+							"role",
+							"password",
+							"image",
+							"gender",
+						],
+					},
+				},
+			],
 			attributes: {
-				exclude: ["createdAt", "updatedAt", "password", "id"],
+				exclude: ["createdAt", "updatedAt"],
 			},
 		});
 		res.send({
 			status: "success",
-			message: "User Succesfully Updated",
+			message: "Product Successfully Updated",
 			data: {
-				user,
+				product,
 			},
 		});
 	} catch (err) {
@@ -150,24 +306,24 @@ exports.deleteProduct = async (req, res) => {
 	try {
 		const { id } = req.params;
 
-		const user = await Product.findOne({
+		const product = await Product.findOne({
 			where: {
-				id: id,
+				id,
 			},
 		});
 
-		if (!user) {
+		if (!product) {
 			return res.status(400).send({
 				status: "error",
 				message: "can't found",
 			});
 		}
 
-		await Product.destroy();
+		await product.destroy();
 
 		res.send({
 			status: "success",
-			message: "User Succesfully Delete",
+			message: "Product Succesfully Delete",
 		});
 	} catch (err) {
 		console.log(err);

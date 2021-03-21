@@ -63,7 +63,7 @@ exports.updateUser = async (req, res) => {
 			fullName: Joi.string().required(),
 			phone: Joi.string().required(),
 			location: Joi.string().required(),
-			gender: Joi.string().required(),
+			// gender: Joi.string().required(),
 		});
 
 		const { error } = schema.validate(req.body);
@@ -79,11 +79,11 @@ exports.updateUser = async (req, res) => {
 		await console.log("body", body);
 		await console.log("ok", req.userId);
 
-		// await User.update(body, {
-		// 	where: {
-		// 		id: req.userId.id,
-		// 	},
-		// });
+		await User.update(body, {
+			where: {
+				id: req.userId.id,
+			},
+		});
 
 		const user = await User.findOne({
 			where: {

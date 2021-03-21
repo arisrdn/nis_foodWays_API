@@ -8,7 +8,9 @@ exports.uploadFile = (imageFile, folder) => {
 		case "profile":
 			path = "uploads/profile";
 			break;
-
+		case "product":
+			path = "uploads/product";
+			break;
 		default:
 			path = "uploads";
 			break;
@@ -75,6 +77,7 @@ exports.uploadFile = (imageFile, folder) => {
 				return res.status(400).send(err);
 			}
 
+			console.log("res", req.files);
 			//jika oke dan aman lanjut ke controller
 			//akses nnti pake req.files
 			return next();

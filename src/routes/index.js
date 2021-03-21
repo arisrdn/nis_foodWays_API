@@ -16,7 +16,13 @@ const {
 } = require("../controllers/user");
 
 // product
-const { getproducts } = require("../controllers/product");
+const {
+	getProducts,
+	getProductsUser,
+	getDetailProduct,
+	createProduct,
+	updateProduct,
+} = require("../controllers/product");
 
 // Loginregister
 router.post("/login", textSanitaze, uploadFile("imageFile"), login);
@@ -33,7 +39,21 @@ router.patch(
 );
 router.delete("/user/:id", authenticated, deleteUser);
 
-// Users
-router.get("/products", getproducts);
+// Product
+router.get("/products", authenticated, getProducts);
+router.get("/products/:id", authenticated, getProductsUser);
+router.get("/product/:id", authenticated, getDetailProduct);
+router.patch(
+	"/product/:id",
+	authenticated,
+	uploadFile("imageFile", "product"),
+	updateProduct
+);
+router.post(
+	"/product",
+	authenticated,
+	uploadFile("imageFile", "product"),
+	createProduct
+);
 
 module.exports = router;
