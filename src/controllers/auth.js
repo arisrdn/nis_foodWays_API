@@ -8,7 +8,8 @@ dotenv.config();
 exports.login = async (req, res) => {
 	try {
 		const { email, password } = req.body;
-		// console.log("cek req", res.send);
+
+		// console.log(req);
 		//   validasi
 		const schema = Joi.object({
 			email: Joi.string().email().min(10).max(50).required(),
@@ -90,6 +91,7 @@ exports.register = async (req, res) => {
 			fullName: Joi.string().required(),
 			gender: Joi.string().required(),
 			phone: Joi.string().required(),
+			type: Joi.string().required(),
 		});
 
 		const { error } = schema.validate(req.body);
