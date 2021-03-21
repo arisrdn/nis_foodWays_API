@@ -5,6 +5,7 @@ const { authenticated } = require("../middleware/auth");
 const { textSanitaze } = require("../middleware/textSanitaze");
 // const { uploadFile } = require("../middleware/upload");
 const { uploadFile } = require("../middleware/uploadimage");
+const { checkRolePartner, checkRoleUser } = require("../middleware/checkRole");
 
 // user
 const { register, login } = require("../controllers/auth");
@@ -52,6 +53,7 @@ router.patch(
 router.post(
 	"/product",
 	authenticated,
+	checkRoleUser,
 	uploadFile("imageFile", "product"),
 	createProduct
 );
