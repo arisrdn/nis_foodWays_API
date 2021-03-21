@@ -116,7 +116,7 @@ exports.getProductsPartnerLogin = async (req, res) => {
 		const id = req.userId.id;
 		const product = await Product.findAll({
 			where: {
-				id,
+				userId: id,
 			},
 			attributes: {
 				exclude: ["createdAt", "updatedAt"],

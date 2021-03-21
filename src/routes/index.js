@@ -23,6 +23,7 @@ const {
 	getDetailProduct,
 	createProduct,
 	updateProduct,
+	getProductsPartnerLogin,
 } = require("../controllers/product");
 
 // Loginregister
@@ -41,6 +42,7 @@ router.patch(
 router.delete("/user/:id", authenticated, deleteUser);
 
 // Product
+router.get("/store", authenticated, checkRolePartner, getProductsPartnerLogin);
 router.get("/products", authenticated, getProducts);
 router.get("/products/:id", authenticated, getProductsUser);
 router.get("/product/:id", authenticated, getDetailProduct);
@@ -53,7 +55,7 @@ router.patch(
 router.post(
 	"/product",
 	authenticated,
-	checkRoleUser,
+	checkRolePartner,
 	uploadFile("imageFile", "product"),
 	createProduct
 );
