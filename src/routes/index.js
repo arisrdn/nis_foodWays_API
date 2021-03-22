@@ -24,8 +24,17 @@ const {
 	createProduct,
 	updateProduct,
 	getProductsPartnerLogin,
+	getProductFav,
 } = require("../controllers/product");
+//transaction
+const {
+	getTransactionStore,
+	getDetailTransaction,
+	getTest,
+	createTransaction,
+} = require("../controllers/transaction");
 
+// link
 // Loginregister
 router.post("/login", textSanitaze, uploadFile("imageFile"), login);
 router.post("/register", textSanitaze, register);
@@ -43,6 +52,7 @@ router.delete("/user/:id", authenticated, deleteUser);
 
 // Product
 router.get("/store", authenticated, checkRolePartner, getProductsPartnerLogin);
+router.get("/store/fav", authenticated, getProductFav);
 router.get("/products", authenticated, getProducts);
 router.get("/products/:id", authenticated, getProductsUser);
 router.get("/product/:id", authenticated, getDetailProduct);
@@ -59,5 +69,11 @@ router.post(
 	uploadFile("imageFile", "product"),
 	createProduct
 );
+
+// transaction
+// router.get("/transaction/", authenticated, getTransactionStore);
+router.get("/transaction/:id", authenticated, getDetailTransaction);
+router.get("/test", authenticated, getTest);
+router.post("/transaction", authenticated, createTransaction);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const { Product, User } = require("../../models/");
 const Joi = require("joi");
+const { Sequelize, Model, DataTypes } = require("sequelize");
 
 exports.getProducts = async (req, res) => {
 	try {
@@ -30,6 +31,65 @@ exports.getProducts = async (req, res) => {
 			message: "Produccts Succesfully Get",
 			data: {
 				products,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
+exports.getProductFav = async (req, res) => {
+	try {
+		const store = await User.findAll({
+			include: [
+				{
+					model: Product,
+					as: "products",
+					attributes: ["tittle"],
+				},
+			],
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "userId"],
+			},
+		});
+
+		// await User.findAndCountAll({
+		// 	include: [{ model: Product, as: "products" }],
+		// 	// limit: 3,
+		// });
+
+		// products = "56";
+		await console.log("fav ==========", store);
+		// const products = await Product.findAll({
+		// 	include: [
+		// 		{
+		// 			model: User,
+		// 			as: "user",
+		// 			attributes: {
+		// 				exclude: [
+		// 					"createdAt",
+		// 					"updatedAt",
+		// 					"UserId",
+		// 					"role",
+		// 					"password",
+		// 					"image",
+		// 					"gender",
+		// 				],
+		// 			},
+		// 		},
+		// 	],
+		// 	attributes: {
+		// 		exclude: ["createdAt", "updatedAt", "userId"],
+		// 	},
+		// });
+		res.send({
+			status: "success",
+			message: "Produccts Succesfully Get",
+			data: {
+				store,
 			},
 		});
 	} catch (err) {
