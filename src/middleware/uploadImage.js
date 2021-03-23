@@ -4,6 +4,7 @@ exports.uploadFile = (imageFile, folder) => {
 	//initialisasi multer diskstorage
 	//menentukan destionation file diupload
 	//menentukan nama file (rename agar tidak ada nama file ganda)
+
 	switch (folder) {
 		case "profile":
 			path = "uploads/profile";
@@ -11,6 +12,7 @@ exports.uploadFile = (imageFile, folder) => {
 		case "product":
 			path = "uploads/product";
 			break;
+
 		default:
 			path = "uploads";
 			break;
@@ -56,6 +58,7 @@ exports.uploadFile = (imageFile, folder) => {
 
 	//middleware handler
 	return (req, res, next) => {
+		// console.log("sasasasasasasasasa");
 		upload(req, res, function (err) {
 			//munculkan error jika validasi gagal
 			if (req.fileValidationError)
@@ -77,7 +80,7 @@ exports.uploadFile = (imageFile, folder) => {
 				return res.status(400).send(err);
 			}
 
-			console.log("res", req.files);
+			// console.log("res", req.files);
 			//jika oke dan aman lanjut ke controller
 			//akses nnti pake req.files
 			return next();

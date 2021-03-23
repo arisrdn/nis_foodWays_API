@@ -139,7 +139,6 @@ exports.register = async (req, res) => {
 				user: {
 					name: user.name,
 					email: user.email,
-					email: user.role,
 					token,
 				},
 			},

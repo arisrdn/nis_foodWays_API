@@ -1,11 +1,28 @@
-const { Product, User, Transaction, Order } = require("../../models/");
+const {
+	Product,
+	User,
+	Transaction,
+	Order,
+	Restaurant,
+} = require("../../models/");
 const Joi = require("joi");
 const { Op } = require("sequelize");
-const order = require("../../models/order");
-exports.getTransactionPartner = async (req, res) => {
+
+exports.getRestaurantTransactions = async (req, res) => {
 	try {
-		const transaction = await Transaction.findAll({
-			where: { partnerId: req.userId.id },
+		const restaurant = Restaurant.findOne({
+			where: {
+				userId: req.userId.id,
+			},
+		});
+		if (!restaurant) {
+			return res.status(400).send({
+				status: "failed",
+				message: "Access Denied",
+			});
+		}
+		const transactions = await Transaction.findAll({
+			where: { restaurantId: restaurant.id },
 			include: [
 				{
 					model: User,
@@ -23,14 +40,16 @@ exports.getTransactionPartner = async (req, res) => {
 					},
 				},
 				{
-					model: Product,
-					// as: "order",
-					through: {
-						model: Order,
-						as: "detail",
-					},
+					model: Order,
+					as: "order",
+					// attributes: [["productId", "id"], "qty"],
 					attributes: {
 						exclude: ["createdAt", "updatedAt"],
+					},
+					include: {
+						model: Product,
+						as: "product",
+						attributes: ["tittle", "image"],
 					},
 				},
 			],
@@ -38,43 +57,11 @@ exports.getTransactionPartner = async (req, res) => {
 				exclude: ["createdAt", "updatedAt", "partnerId"],
 			},
 		});
-
-		// const transaction = await Transaction.findAll({
-		// 	where: { partnerId: req.userId.id },
-		// 	include: [
-		// 		{
-		// 			model: User,
-		// 			as: "userOrder",
-		// 			attributes: {
-		// 				exclude: [
-		// 					"createdAt",
-		// 					"updatedAt",
-		// 					"userId",
-		// 					"role",
-		// 					"password",
-		// 					"image",
-		// 					"gender",
-		// 				],
-		// 			},
-		// 		},
-		// 		{
-		// 			model: Order,
-		// 			as: "order",
-
-		// 			attributes: {
-		// 				exclude: ["createdAt", "updatedAt"],
-		// 			},
-		// 		},
-		// 	],
-		// 	attributes: {
-		// 		exclude: ["createdAt", "updatedAt", "partnerId"],
-		// 	},
-		// });
 		res.send({
 			status: "success",
-			message: "Products Succesfully Get",
+			message: "Transactions Succesfully Get",
 			data: {
-				transaction,
+				transactions,
 			},
 		});
 	} catch (err) {
@@ -95,6 +82,13 @@ exports.getDetailTransaction = async (req, res) => {
 			},
 			include: [
 				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId"],
+					},
+				},
+				{
 					model: User,
 					as: "userOrder",
 					attributes: {
@@ -109,9 +103,21 @@ exports.getDetailTransaction = async (req, res) => {
 						],
 					},
 				},
+				{
+					model: Order,
+					as: "order",
+					attributes: {
+						exclude: ["createdAt", "updatedAt"],
+					},
+					include: {
+						model: Product,
+						as: "product",
+						attributes: ["tittle", "image"],
+					},
+				},
 			],
 			attributes: {
-				exclude: ["createdAt", "updatedAt", "partnerId", "userId"],
+				exclude: ["createdAt", "updatedAt", "restaurantId", "userId"],
 			},
 		});
 		res.send({
@@ -156,17 +162,17 @@ exports.createTransaction = async (req, res) => {
 
 		console.log("products", orders);
 
-		const transaction = await Transaction.create({
+		const transactionCreate = await Transaction.create({
 			userId: req.userId.id,
 			shippingFee: body.shippingFee,
 			locationDelivery: body.locationDelivery,
-			partnerId: orders[0].userId,
-			status: "Waiting Approval",
+			partnerId: orders[0].restaurantId,
+			status: "Waiting Approve",
 		});
 
 		for (let i = 0; i < orders.length; i++) {
 			await Order.create({
-				transactionId: transaction.id,
+				transactionId: transactionCreate.id,
 				productId: orders[i].id,
 				pricePurchased: orders[i].price,
 				qty: orders[i].qty,
@@ -180,30 +186,234 @@ exports.createTransaction = async (req, res) => {
 		// 		qty: product.qty,
 		// 	}))
 		// );
-		const userOrder = await User.findOne({
+		const transaction = await Transaction.findOne({
 			where: {
-				id: req.userId.id,
+				id: transactionCreate.id,
 			},
+			include: [
+				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId"],
+					},
+				},
+				{
+					model: User,
+					as: "userOrder",
+					attributes: {
+						exclude: [
+							"createdAt",
+							"updatedAt",
+							"userId",
+							"role",
+							"password",
+							"image",
+							"gender",
+						],
+					},
+				},
+				{
+					model: Order,
+					as: "order",
+					attributes: {
+						exclude: ["createdAt", "updatedAt"],
+					},
+					include: {
+						model: Product,
+						as: "product",
+						attributes: ["tittle", "image"],
+					},
+				},
+			],
 			attributes: {
-				exclude: ["password", "image", "role", "createdAt", "updatedAt"],
+				exclude: ["createdAt", "updatedAt", "restaurantId", "userId"],
 			},
 		});
-
 		res.send({
 			status: "success",
 			message: "Success Add New Transaction",
 			data: {
-				transaction: {
-					id: transaction.id,
-					userOrder,
-					status: transaction.status,
-					orders,
-				},
+				transaction,
 			},
 		});
 	} catch (error) {
-		console.log(error);
-		res.status(500).send(...errorResponse);
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
+
+exports.editTransaction = async (req, res) => {
+	try {
+		const { body } = req;
+		const { id } = req.params;
+
+		const transactionEdit = await Transaction.findOne({
+			where: {
+				id,
+			},
+		});
+
+		if (transactionEdit.id == undefined)
+			return res.status(404).send({
+				status: "Error",
+				message: "Transactions not found",
+			});
+
+		const schemaTransactionInput = Joi.object({
+			status: Joi.string().required(),
+		});
+
+		const { error } = schemaTransactionInput.validate(body);
+
+		if (error)
+			return res.status(400).send({
+				status: "There's error in your data input",
+				message: error.details[0].message,
+			});
+
+		const idCheck = req.userId.id;
+
+		switch (body.status) {
+			case "APPROVE":
+				if (transactionEdit.restaurantId != idCheck) {
+					return res.send({
+						status: "Error",
+						message: "You haven't authorization to edit this transaction.",
+					});
+				}
+				transactionEdit.status = "On The Way";
+				break;
+			case "CANCEL":
+				if (transactionEdit.restaurantId != idCheck) {
+					return res.send({
+						status: "Error",
+						message: "You haven't authorization to edit this transaction.",
+					});
+				}
+				transactionEdit.status = "Cancel";
+				break;
+			case "SUCCESS":
+				if (transactionEdit.userId != idCheck) {
+					return res.send({
+						status: "Error",
+						message: "You haven't authorization to edit this transaction.",
+					});
+				}
+				transactionEdit.status = "Success";
+				break;
+
+			default:
+				break;
+		}
+
+		await transactionEdit.save();
+
+		const transaction = await Transaction.findOne({
+			where: {
+				id: transactionEdit.id,
+			},
+			include: [
+				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId"],
+					},
+				},
+				{
+					model: User,
+					as: "userOrder",
+					attributes: {
+						exclude: [
+							"createdAt",
+							"updatedAt",
+							"userId",
+							"role",
+							"password",
+							"image",
+							"gender",
+						],
+					},
+				},
+				{
+					model: Order,
+					as: "order",
+					attributes: {
+						exclude: ["createdAt", "updatedAt"],
+					},
+					include: {
+						model: Product,
+						as: "product",
+						attributes: ["tittle", "image"],
+					},
+				},
+			],
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "restaurantId", "userId"],
+			},
+		});
+		res.send({
+			status: "success",
+			message: "Success Edit Transaction",
+			data: {
+				transaction,
+			},
+		});
+	} catch (error) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
+
+exports.getUserTransactions = async (req, res) => {
+	try {
+		const transactions = await Transaction.findAll({
+			where: { userId: req.userId.id },
+			include: [
+				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId"],
+					},
+				},
+				{
+					model: Order,
+					as: "order",
+					attributes: {
+						exclude: ["createdAt", "updatedAt"],
+					},
+					include: {
+						model: Product,
+						as: "product",
+						attributes: ["tittle", "image"],
+					},
+				},
+			],
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "partnerId"],
+			},
+		});
+		res.send({
+			status: "success",
+			message: "Transactions Succesfully Get",
+			data: {
+				transactions,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
 	}
 };
 

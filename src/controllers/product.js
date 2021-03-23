@@ -1,95 +1,27 @@
-const { Product, User } = require("../../models/");
+const { Product, Restaurant } = require("../../models/");
 const Joi = require("joi");
-const { Sequelize, Model, DataTypes } = require("sequelize");
 
 exports.getProducts = async (req, res) => {
 	try {
 		const products = await Product.findAll({
 			include: [
 				{
-					model: User,
-					as: "user",
+					model: Restaurant,
+					as: "restaurant",
 					attributes: {
-						exclude: [
-							"createdAt",
-							"updatedAt",
-							"UserId",
-							"role",
-							"password",
-							"image",
-							"gender",
-						],
+						exclude: ["createdAt", "updatedAt", "UserId"],
 					},
 				},
 			],
 			attributes: {
-				exclude: ["createdAt", "updatedAt", "userId"],
+				exclude: ["createdAt", "updatedAt", "restaurantId"],
 			},
 		});
 		res.send({
 			status: "success",
-			message: "Produccts Succesfully Get",
+			message: "Produccts Successfully Get",
 			data: {
 				products,
-			},
-		});
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			status: "error",
-			message: "Server Error",
-		});
-	}
-};
-exports.getProductFav = async (req, res) => {
-	try {
-		const store = await User.findAll({
-			include: [
-				{
-					model: Product,
-					as: "products",
-					attributes: ["tittle"],
-				},
-			],
-			attributes: {
-				exclude: ["createdAt", "updatedAt", "userId"],
-			},
-		});
-
-		// await User.findAndCountAll({
-		// 	include: [{ model: Product, as: "products" }],
-		// 	// limit: 3,
-		// });
-
-		// products = "56";
-		await console.log("fav ==========", store);
-		// const products = await Product.findAll({
-		// 	include: [
-		// 		{
-		// 			model: User,
-		// 			as: "user",
-		// 			attributes: {
-		// 				exclude: [
-		// 					"createdAt",
-		// 					"updatedAt",
-		// 					"UserId",
-		// 					"role",
-		// 					"password",
-		// 					"image",
-		// 					"gender",
-		// 				],
-		// 			},
-		// 		},
-		// 	],
-		// 	attributes: {
-		// 		exclude: ["createdAt", "updatedAt", "userId"],
-		// 	},
-		// });
-		res.send({
-			status: "success",
-			message: "Produccts Succesfully Get",
-			data: {
-				store,
 			},
 		});
 	} catch (err) {
@@ -104,35 +36,26 @@ exports.getProductFav = async (req, res) => {
 exports.getDetailProduct = async (req, res) => {
 	try {
 		const { id } = req.params;
-		// console.log("chek id", req.userId);
 		const product = await Product.findOne({
 			where: {
 				id,
 			},
 			include: [
 				{
-					model: User,
-					as: "user",
+					model: Restaurant,
+					as: "restaurant",
 					attributes: {
-						exclude: [
-							"createdAt",
-							"updatedAt",
-							"UserId",
-							"role",
-							"password",
-							"image",
-							"gender",
-						],
+						exclude: ["createdAt", "updatedAt", "UserId"],
 					},
 				},
 			],
 			attributes: {
-				exclude: ["createdAt", "updatedAt"],
+				exclude: ["createdAt", "updatedAt", "restaurantId"],
 			},
 		});
 		res.send({
 			status: "success",
-			message: "Product Succesfully Get",
+			message: "Product Successfully Get",
 			data: {
 				product,
 			},
@@ -145,48 +68,26 @@ exports.getDetailProduct = async (req, res) => {
 		});
 	}
 };
-exports.getProductsUser = async (req, res) => {
+
+exports.getProductsRestaurant = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const product = await Product.findAll({
+		const products = await Product.findAll({
 			where: {
-				userId: id,
+				restaurantId: id,
 			},
 			attributes: {
 				exclude: ["createdAt", "updatedAt"],
 			},
 		});
+
+		if (!products) {
+		}
 		res.send({
 			status: "success",
-			message: "Product Succesfully Get",
+			message: "Products Succesfully Get",
 			data: {
-				product,
-			},
-		});
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			status: "error",
-			message: "Server Error",
-		});
-	}
-};
-exports.getProductsPartnerLogin = async (req, res) => {
-	try {
-		const id = req.userId.id;
-		const product = await Product.findAll({
-			where: {
-				userId: id,
-			},
-			attributes: {
-				exclude: ["createdAt", "updatedAt"],
-			},
-		});
-		res.send({
-			status: "success",
-			message: "Product Succesfully Get",
-			data: {
-				product,
+				products,
 			},
 		});
 	} catch (err) {
@@ -222,11 +123,16 @@ exports.createProduct = async (req, res) => {
 				message: "Please select image to upload",
 			});
 		}
-		console.log("chek");
+
+		const restauran = Restaurant.findOne({
+			where: {
+				userId: req.userId.id,
+			},
+		});
 
 		const productCrete = await Product.create({
 			...req.body,
-			userId: req.userId.id,
+			restaurantId: restauran.id,
 			image: req.files.imageFile[0].filename,
 		});
 
@@ -236,18 +142,10 @@ exports.createProduct = async (req, res) => {
 			},
 			include: [
 				{
-					model: User,
-					as: "user",
+					model: Restaurant,
+					as: "restauran",
 					attributes: {
-						exclude: [
-							"createdAt",
-							"updatedAt",
-							"UserId",
-							"role",
-							"password",
-							"image",
-							"gender",
-						],
+						exclude: ["createdAt", "updatedAt", "UserId"],
 					},
 				},
 			],
@@ -327,18 +225,10 @@ exports.updateProduct = async (req, res) => {
 			},
 			include: [
 				{
-					model: User,
-					as: "user",
+					model: Restaurant,
+					as: "restaurant",
 					attributes: {
-						exclude: [
-							"createdAt",
-							"updatedAt",
-							"UserId",
-							"role",
-							"password",
-							"image",
-							"gender",
-						],
+						exclude: ["createdAt", "updatedAt", "UserId"],
 					},
 				},
 			],
@@ -375,7 +265,7 @@ exports.deleteProduct = async (req, res) => {
 		if (!product) {
 			return res.status(400).send({
 				status: "error",
-				message: "can't found",
+				message: "product doesn't exist",
 			});
 		}
 
@@ -383,7 +273,7 @@ exports.deleteProduct = async (req, res) => {
 
 		res.send({
 			status: "success",
-			message: "Product Succesfully Delete",
+			message: "Product Succesfully Deleted",
 		});
 	} catch (err) {
 		console.log(err);

@@ -17,11 +17,11 @@ module.exports = {
 			image: {
 				type: Sequelize.STRING,
 			},
-			userId: {
+			restaurantId: {
 				allowNull: false,
 				type: Sequelize.INTEGER,
 				references: {
-					model: "Users",
+					model: "Restaurants",
 					key: "id",
 				},
 				onUpdate: "CASCADE",

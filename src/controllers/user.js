@@ -55,11 +55,10 @@ exports.getDetailUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
 	try {
 		const { body } = req;
-		// const { fullName, email, phone, location, gender } = req.body;
 
 		await console.log("isi body", req.files);
 		const schema = Joi.object({
-			email: Joi.string().email().min(10).max(50).required(),
+			// email: Joi.string().email().min(10).max(50).required(),
 			fullName: Joi.string().required(),
 			phone: Joi.string().required(),
 			location: Joi.string().required(),
@@ -130,7 +129,7 @@ exports.deleteUser = async (req, res) => {
 		if (!user) {
 			return res.status(400).send({
 				status: "error",
-				message: "can't found",
+				message: "user not exist",
 			});
 		}
 
@@ -138,7 +137,7 @@ exports.deleteUser = async (req, res) => {
 
 		res.send({
 			status: "success",
-			message: "User Succesfully Delete",
+			message: "User Successfully Delete",
 		});
 	} catch (err) {
 		console.log(err);

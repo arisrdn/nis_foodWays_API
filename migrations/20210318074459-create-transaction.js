@@ -11,6 +11,9 @@ module.exports = {
 			status: {
 				type: Sequelize.STRING,
 			},
+			note: {
+				type: Sequelize.STRING,
+			},
 			locationDelivery: {
 				type: Sequelize.STRING,
 			},
@@ -27,11 +30,11 @@ module.exports = {
 				onUpdate: "CASCADE",
 				onDelete: "CASCADE",
 			},
-			partnerId: {
+			restaurantrId: {
 				allowNull: false,
 				type: Sequelize.INTEGER,
 				references: {
-					model: "Users",
+					model: "Restaurants",
 					key: "id",
 				},
 				onUpdate: "CASCADE",

@@ -13,27 +13,21 @@ module.exports = (sequelize, DataTypes) => {
 				foreignKey: "userId",
 				as: "userOrder",
 			});
-
-			Transaction.belongsToMany(models.Product, {
-				foreignKey: "transactionId",
-				// as: "order",
-				through: {
-					model: "Order",
-					as: "jembatan",
-					foreignKey: "transactionId",
-				},
+			Transaction.belongsTo(models.Restaurant, {
+				foreignKey: "restaurantId",
+				as: "restaurant",
 			});
-
-			// Transaction.hasMany(models.Order, {
-			// 	as: "orders",
-			// });
+			Transaction.hasMany(models.Order, {
+				as: "orders",
+			});
 		}
 	}
 	Transaction.init(
 		{
 			status: DataTypes.STRING,
+			note: DataTypes.STRING,
 			shippingFee: DataTypes.INTEGER,
-			partnerId: DataTypes.INTEGER,
+			restaurantId: DataTypes.INTEGER,
 			userId: DataTypes.INTEGER,
 			locationDelivery: DataTypes.STRING,
 		},
