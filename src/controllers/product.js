@@ -81,7 +81,11 @@ exports.getProductsRestaurant = async (req, res) => {
 			},
 		});
 
-		if (!products) {
+		if (products.id == undefined) {
+			return res.status(400).send({
+				status: "error",
+				message: "product doesn't exist",
+			});
 		}
 		res.send({
 			status: "success",
@@ -124,15 +128,21 @@ exports.createProduct = async (req, res) => {
 			});
 		}
 
-		const restauran = Restaurant.findOne({
+		const restaurant = await Restaurant.findOne({
 			where: {
 				userId: req.userId.id,
 			},
 		});
+		if (!restaurant)
+			return res.send({
+				status: "Create Failed",
+				message: `You don't have a restaurant`,
+			});
 
+		console.log("eataurant", restaurant);
 		const productCrete = await Product.create({
 			...req.body,
-			restaurantId: restauran.id,
+			restaurantId: restaurant.id,
 			image: req.files.imageFile[0].filename,
 		});
 
@@ -143,9 +153,9 @@ exports.createProduct = async (req, res) => {
 			include: [
 				{
 					model: Restaurant,
-					as: "restauran",
+					as: "restaurant",
 					attributes: {
-						exclude: ["createdAt", "updatedAt", "UserId"],
+						exclude: ["createdAt", "updatedAt", "userId"],
 					},
 				},
 			],
@@ -177,7 +187,7 @@ exports.updateProduct = async (req, res) => {
 
 		const schema = Joi.object({
 			tittle: Joi.string().required(),
-			price: Joi.required(),
+			price: Joi.number().required(),
 		});
 
 		const { error } = schema.validate(req.body);
@@ -268,7 +278,24 @@ exports.deleteProduct = async (req, res) => {
 				message: "product doesn't exist",
 			});
 		}
+		const restaurant = await Restaurant.findOne({
+			where: {
+				userId: req.userId.id,
+			},
+		});
+		if (!restaurant) {
+			return res.status(400).send({
+				status: "delete Failed",
+				message: "cannot be accessed for deletion",
+			});
+		}
 
+		if (product.restaurantId !== restaurant.id) {
+			return res.status(400).send({
+				status: "delete Failed",
+				message: "cannot be accessed for deletion",
+			});
+		}
 		await product.destroy();
 
 		res.send({

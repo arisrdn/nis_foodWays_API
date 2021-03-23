@@ -21,6 +21,7 @@ const {
 	getRestaurant,
 	createRestaurant,
 	updateRestaurant,
+	getDetailRestaurant,
 } = require("../controllers/resaturant");
 
 // product
@@ -59,6 +60,7 @@ router.delete("/user/:id", authenticated, deleteUser);
 // restaurant
 router.get("/restaurants", getRestaurants);
 router.get("/restaurant", authenticated, getRestaurant);
+router.get("/restaurant/:id", authenticated, getDetailRestaurant);
 router.post(
 	"/restaurant",
 	authenticated,
@@ -74,7 +76,6 @@ router.patch(
 
 //product
 router.get("/products", authenticated, getProducts);
-
 //atau  restoran detail
 router.get("/products/:id", authenticated, getProductsRestaurant);
 router.get("/product/:id", authenticated, getDetailProduct);
@@ -84,9 +85,14 @@ router.post(
 	uploadFile("imageFile", "product"),
 	createProduct
 );
-router.post("/product", authenticated, createProduct);
-router.patch("/product", authenticated, updateProduct);
-router.delete("/product", authenticated, deleteProduct);
+// router.post("/product", aut	henticated, createProduct);
+router.patch(
+	"/product/:id",
+	authenticated,
+	uploadFile("imageFile", "product"),
+	updateProduct
+);
+router.delete("/product/:id", authenticated, deleteProduct);
 
 // // Product
 // router.get("/store", authenticated, checkRolePartner, getProductsPartnerLogin);

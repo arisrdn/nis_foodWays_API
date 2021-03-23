@@ -111,7 +111,7 @@ exports.updateRestaurant = async (req, res) => {
 		});
 		// console.log("usr id", restaurantUpdate);
 		if (restaurantUpdate.id == undefined)
-			return res.send({
+			return res.status(400).send({
 				status: "Update Failed",
 				message: `You don't have a restaurant`,
 			});
@@ -226,6 +226,41 @@ exports.getRestaurant = async (req, res) => {
 		const restaurant = await Restaurant.findOne({
 			where: {
 				userId: req.userId.id,
+			},
+			include: [
+				{
+					model: Product,
+					as: "products",
+					attributes: {
+						exclude: ["createdAt", "updatedAt"],
+					},
+				},
+			],
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "userId"],
+			},
+		});
+		res.send({
+			status: "success",
+			message: "Restaurant Succesfully Get",
+			data: {
+				restaurant,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
+exports.getDetailRestaurant = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const restaurant = await Restaurant.findOne({
+			where: {
+				id,
 			},
 			include: [
 				{
