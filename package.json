@@ -1,12 +1,11 @@
 {
-	"name": "batch-21-express",
+	"name": "waysfood",
 	"version": "1.0.0",
 	"description": "",
 	"main": "server.js",
 	"scripts": {
-		"start": "nodemon server.js",
-		"client": "npm start --prefix ../front-end",
-		"dev": "concurrently \"npm start\" \"npm run client\""
+		"starts": "nodemon server.js",
+		"start": "node server.js"
 	},
 	"author": "",
 	"license": "ISC",
@@ -20,6 +19,7 @@
 		"jsonwebtoken": "^8.5.1",
 		"multer": "^1.4.2",
 		"mysql2": "^2.2.5",
+		"pg": "7.4.3",
 		"sequelize": "^6.5.1",
 		"sequelize-cli": "^6.2.0"
 	},
