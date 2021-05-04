@@ -9,5 +9,8 @@ app.use(express.json());
 app.use(cors());
 // app.use("/api/v1/", router);
 app.use("/uploads", express.static("uploads"));
-
+//create the home route
+app.get("/", (req, res) => {
+	res.send("End point run");
+});
 app.listen(port, () => console.log(`Your server is running on ${port}`));
