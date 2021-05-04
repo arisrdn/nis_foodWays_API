@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
 			});
 			Transaction.hasMany(models.Order, {
 				as: "orders",
+				foreignKey: "transactionId",
 			});
 		}
 	}
@@ -29,6 +30,7 @@ module.exports = (sequelize, DataTypes) => {
 			shippingFee: DataTypes.INTEGER,
 			restaurantId: DataTypes.INTEGER,
 			userId: DataTypes.INTEGER,
+			isRead: DataTypes.INTEGER,
 			locationDelivery: DataTypes.STRING,
 		},
 		{

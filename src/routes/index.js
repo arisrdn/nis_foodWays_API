@@ -7,7 +7,7 @@ const { uploadFile } = require("../middleware/uploadimage");
 const { checkRolePartner, checkRoleUser } = require("../middleware/checkRole");
 
 // user
-const { register, login } = require("../controllers/auth");
+const { register, login, checkAuth } = require("../controllers/auth");
 const {
 	getUsers,
 	getDetailUser,
@@ -22,6 +22,7 @@ const {
 	createRestaurant,
 	updateRestaurant,
 	getDetailRestaurant,
+	getRestaurantFav,
 } = require("../controllers/resaturant");
 
 // product
@@ -35,16 +36,21 @@ const {
 } = require("../controllers/product");
 //transaction
 const {
-	getTransactionStore,
+	getTransactions,
 	getDetailTransaction,
-	getTest,
 	createTransaction,
+	getUserTransactions,
+	getRestaurantTransactions,
+	updatIsRead,
+	editTransaction,
+	getTest,
 } = require("../controllers/transaction");
 
 // link
-// Loginregister
-router.post("/login", textSanitaze, uploadFile("imageFile"), login);
+// Auth
+router.post("/login", textSanitaze, login);
 router.post("/register", textSanitaze, register);
+router.get("/check-auth", authenticated, checkAuth);
 
 // Users
 router.get("/users", authenticated, getUsers);
@@ -58,19 +64,20 @@ router.patch(
 router.delete("/user/:id", authenticated, deleteUser);
 
 // restaurant
+router.get("/restaurants-fav", getRestaurantFav);
 router.get("/restaurants", getRestaurants);
 router.get("/restaurant", authenticated, getRestaurant);
 router.get("/restaurant/:id", authenticated, getDetailRestaurant);
 router.post(
 	"/restaurant",
 	authenticated,
-	uploadFile("imageFile", "product"),
+	uploadFile("imageFile", "profile"),
 	createRestaurant
 );
 router.patch(
 	"/restaurant",
 	authenticated,
-	uploadFile("imageFile", "product"),
+	uploadFile("imageFile", "profile"),
 	updateRestaurant
 );
 
@@ -85,7 +92,6 @@ router.post(
 	uploadFile("imageFile", "product"),
 	createProduct
 );
-// router.post("/product", aut	henticated, createProduct);
 router.patch(
 	"/product/:id",
 	authenticated,
@@ -94,30 +100,20 @@ router.patch(
 );
 router.delete("/product/:id", authenticated, deleteProduct);
 
-// // Product
-// router.get("/store", authenticated, checkRolePartner, getProductsPartnerLogin);
-// router.get("/store/fav", authenticated, getProductFav);
-// router.get("/products", authenticated, getProducts);
-// router.get("/products/:id", authenticated, getProductsUser);
-// router.get("/product/:id", authenticated, getDetailProduct);
-// router.patch(
-// 	"/product/:id",
-// 	authenticated,
-// 	uploadFile("imageFile", "product"),
-// 	updateProduct
-// );
-// router.post(
-// 	"/product",
-// 	authenticated,
-// 	checkRolePartner,
-// 	uploadFile("imageFile", "product"),
-// 	createProduct
-// );
-
 // // transaction
-// // router.get("/transaction/", authenticated, getTransactionStore);
-// router.get("/transaction/:id", authenticated, getDetailTransaction);
+router.post("/transaction", authenticated, createTransaction);
+router.get("/transaction/:id", authenticated, getDetailTransaction);
+router.get("/transactions", authenticated, getTransactions);
+router.get(
+	"/transactions/restaurant",
+	authenticated,
+	getRestaurantTransactions
+);
+router.get("/transactions/user", authenticated, getUserTransactions);
+router.put("/transaction/:id", authenticated, editTransaction);
+router.put("/isread/:id", authenticated, updatIsRead);
+// router.put("/transactions/user/:id", authenticated, getUserTransactions);
+// router.put("/transactions/restaurant/:id", authenticated, getUserTransactions);
 // router.get("/test", authenticated, getTest);
-// router.post("/transaction", authenticated, createTransaction);
 
 module.exports = router;

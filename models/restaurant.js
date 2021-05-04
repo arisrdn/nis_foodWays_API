@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
 				as: "products",
 			});
 			Restaurant.hasMany(models.Transaction, {
-				foreignKey: "restauranId",
+				foreignKey: "restaurantId",
 				as: "transactions",
 			});
 		}

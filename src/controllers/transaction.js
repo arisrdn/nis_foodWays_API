@@ -8,41 +8,21 @@ const {
 const Joi = require("joi");
 const { Op } = require("sequelize");
 
-exports.getRestaurantTransactions = async (req, res) => {
+exports.getTransactions = async (req, res) => {
 	try {
-		const restaurant = Restaurant.findOne({
-			where: {
-				userId: req.userId.id,
-			},
-		});
-		if (!restaurant) {
-			return res.status(400).send({
-				status: "failed",
-				message: "Access Denied",
-			});
-		}
 		const transactions = await Transaction.findAll({
-			where: { restaurantId: restaurant.id },
 			include: [
 				{
-					model: User,
-					as: "userOrder",
+					model: Restaurant,
+					as: "restaurant",
 					attributes: {
-						exclude: [
-							"createdAt",
-							"updatedAt",
-							"userId",
-							"role",
-							"password",
-							"image",
-							"gender",
-						],
+						exclude: ["createdAt", "updatedAt", "userId", "id"],
 					},
 				},
+
 				{
 					model: Order,
-					as: "order",
-					// attributes: [["productId", "id"], "qty"],
+					as: "orders",
 					attributes: {
 						exclude: ["createdAt", "updatedAt"],
 					},
@@ -105,7 +85,7 @@ exports.getDetailTransaction = async (req, res) => {
 				},
 				{
 					model: Order,
-					as: "order",
+					as: "orders",
 					attributes: {
 						exclude: ["createdAt", "updatedAt"],
 					},
@@ -140,6 +120,7 @@ exports.createTransaction = async (req, res) => {
 	try {
 		const { body } = req;
 
+		// console.log("body", body);
 		const orders = [];
 
 		for (let i = 0; i < body.product.length; i++) {
@@ -160,14 +141,15 @@ exports.createTransaction = async (req, res) => {
 			orders.push(productqty);
 		}
 
-		console.log("products", orders);
+		// console.log("products", orders[0]);
 
 		const transactionCreate = await Transaction.create({
 			userId: req.userId.id,
 			shippingFee: body.shippingFee,
 			locationDelivery: body.locationDelivery,
-			partnerId: orders[0].restaurantId,
+			restaurantId: orders[0].restaurantId,
 			status: "Waiting Approve",
+			isRead: 1,
 		});
 
 		for (let i = 0; i < orders.length; i++) {
@@ -186,6 +168,7 @@ exports.createTransaction = async (req, res) => {
 		// 		qty: product.qty,
 		// 	}))
 		// );
+
 		const transaction = await Transaction.findOne({
 			where: {
 				id: transactionCreate.id,
@@ -195,7 +178,7 @@ exports.createTransaction = async (req, res) => {
 					model: Restaurant,
 					as: "restaurant",
 					attributes: {
-						exclude: ["createdAt", "updatedAt", "userId"],
+						exclude: ["createdAt", "updatedAt", "userId", "id"],
 					},
 				},
 				{
@@ -215,7 +198,7 @@ exports.createTransaction = async (req, res) => {
 				},
 				{
 					model: Order,
-					as: "order",
+					as: "orders",
 					attributes: {
 						exclude: ["createdAt", "updatedAt"],
 					},
@@ -230,6 +213,7 @@ exports.createTransaction = async (req, res) => {
 				exclude: ["createdAt", "updatedAt", "restaurantId", "userId"],
 			},
 		});
+
 		res.send({
 			status: "success",
 			message: "Success Add New Transaction",
@@ -237,7 +221,146 @@ exports.createTransaction = async (req, res) => {
 				transaction,
 			},
 		});
-	} catch (error) {
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
+
+exports.getUserTransactions = async (req, res) => {
+	try {
+		const transactions = await Transaction.findAll({
+			where: { userId: req.userId.id },
+			include: [
+				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId", "id"],
+					},
+				},
+
+				{
+					model: Order,
+					as: "orders",
+					attributes: {
+						exclude: ["createdAt", "updatedAt"],
+					},
+					include: {
+						model: Product,
+						as: "product",
+						attributes: ["tittle", "image"],
+					},
+				},
+			],
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "partnerId"],
+			},
+			order: [["id", "DESC"]],
+		});
+		res.send({
+			status: "success",
+			message: "Transactions Succesfully Get",
+			data: {
+				transactions,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
+exports.getRestaurantTransactions = async (req, res) => {
+	try {
+		const restaurant = await Restaurant.findOne({
+			where: {
+				userId: req.userId.id,
+			},
+		});
+		if (!restaurant)
+			return res.status(400).send({
+				status: "Create Failed",
+				message: `You don't have a restaurant`,
+			});
+		const transactions = await Transaction.findAll({
+			where: { restaurantId: restaurant.id },
+			include: [
+				{
+					model: User,
+					as: "userOrder",
+					attributes: {
+						exclude: [
+							"createdAt",
+							"updatedAt",
+							"userId",
+							"role",
+							"password",
+							"image",
+							"gender",
+						],
+					},
+				},
+				{
+					model: Order,
+					as: "orders",
+					attributes: {
+						exclude: ["createdAt", "updatedAt"],
+					},
+					include: {
+						model: Product,
+						as: "product",
+						attributes: ["tittle", "image"],
+					},
+				},
+			],
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "partnerId"],
+			},
+		});
+		res.send({
+			status: "success",
+			message: "Transactions Succesfully Get",
+			data: {
+				transactions,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
+			status: "error",
+			message: "Server Error",
+		});
+	}
+};
+
+exports.updatIsRead = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const transaction = await Transaction.findOne({
+			where: {
+				id,
+			},
+
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "restaurantId", "userId"],
+			},
+		});
+		transaction.isRead = 0;
+		transaction.save();
+		res.send({
+			status: "success",
+			message: "isRead Succesfully Update",
+			data: {
+				transaction,
+			},
+		});
+	} catch (err) {
 		console.log(err);
 		res.status(500).send({
 			status: "error",
@@ -256,39 +379,44 @@ exports.editTransaction = async (req, res) => {
 				id,
 			},
 		});
-
+		const restaurant = await Restaurant.findOne({
+			where: {
+				userId: req.userId.id,
+			},
+		});
 		if (transactionEdit.id == undefined)
 			return res.status(404).send({
 				status: "Error",
 				message: "Transactions not found",
 			});
 
-		const schemaTransactionInput = Joi.object({
-			status: Joi.string().required(),
-		});
+		// const schemaTransactionInput = Joi.object({
+		// 	status: Joi.string().required(),
+		// });
 
-		const { error } = schemaTransactionInput.validate(body);
+		// const { error } = schemaTransactionInput.validate(body);
 
-		if (error)
-			return res.status(400).send({
-				status: "There's error in your data input",
-				message: error.details[0].message,
-			});
+		// if (error)
+		// 	return res.status(400).send({
+		// 		status: "There's error in your data input",
+		// 		message: error.details[0].message,
+		// 	});
 
 		const idCheck = req.userId.id;
 
 		switch (body.status) {
 			case "APPROVE":
-				if (transactionEdit.restaurantId != idCheck) {
+				if (transactionEdit.restaurantId != restaurant.id) {
 					return res.send({
 						status: "Error",
 						message: "You haven't authorization to edit this transaction.",
 					});
 				}
 				transactionEdit.status = "On The Way";
+
 				break;
 			case "CANCEL":
-				if (transactionEdit.restaurantId != idCheck) {
+				if (transactionEdit.restaurantId != restaurant.id) {
 					return res.send({
 						status: "Error",
 						message: "You haven't authorization to edit this transaction.",
@@ -309,7 +437,7 @@ exports.editTransaction = async (req, res) => {
 			default:
 				break;
 		}
-
+		transactionEdit.isRead = 1;
 		await transactionEdit.save();
 
 		const transaction = await Transaction.findOne({
@@ -341,7 +469,7 @@ exports.editTransaction = async (req, res) => {
 				},
 				{
 					model: Order,
-					as: "order",
+					as: "orders",
 					attributes: {
 						exclude: ["createdAt", "updatedAt"],
 					},
@@ -371,52 +499,6 @@ exports.editTransaction = async (req, res) => {
 		});
 	}
 };
-
-exports.getUserTransactions = async (req, res) => {
-	try {
-		const transactions = await Transaction.findAll({
-			where: { userId: req.userId.id },
-			include: [
-				{
-					model: Restaurant,
-					as: "restaurant",
-					attributes: {
-						exclude: ["createdAt", "updatedAt", "userId"],
-					},
-				},
-				{
-					model: Order,
-					as: "order",
-					attributes: {
-						exclude: ["createdAt", "updatedAt"],
-					},
-					include: {
-						model: Product,
-						as: "product",
-						attributes: ["tittle", "image"],
-					},
-				},
-			],
-			attributes: {
-				exclude: ["createdAt", "updatedAt", "partnerId"],
-			},
-		});
-		res.send({
-			status: "success",
-			message: "Transactions Succesfully Get",
-			data: {
-				transactions,
-			},
-		});
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			status: "error",
-			message: "Server Error",
-		});
-	}
-};
-
 exports.getTest = async (req, res) => {
 	try {
 		const transaction = await Transaction.findAll({

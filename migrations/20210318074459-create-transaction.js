@@ -11,6 +11,9 @@ module.exports = {
 			status: {
 				type: Sequelize.STRING,
 			},
+			isRead: {
+				type: Sequelize.INTEGER,
+			},
 			note: {
 				type: Sequelize.STRING,
 			},
@@ -30,7 +33,7 @@ module.exports = {
 				onUpdate: "CASCADE",
 				onDelete: "CASCADE",
 			},
-			restaurantrId: {
+			restaurantId: {
 				allowNull: false,
 				type: Sequelize.INTEGER,
 				references: {

@@ -5,18 +5,20 @@ exports.uploadFile = (imageFile, folder) => {
 	//menentukan destionation file diupload
 	//menentukan nama file (rename agar tidak ada nama file ganda)
 
-	switch (folder) {
-		case "profile":
-			path = "uploads/profile";
-			break;
-		case "product":
-			path = "uploads/product";
-			break;
+	console.log("folder", folder);
+	// switch (folder) {
+	// 	case "profile":
+	// 		path = "uploads/profile";
+	// 		break;
+	// 	case "product":
+	// 		path = "uploads/product";
+	// 		break;
 
-		default:
-			path = "uploads";
-			break;
-	}
+	// 	default:
+	// 		path = "uploads";
+	// 		break;
+	// }
+	path = "uploads/";
 	const storage = multer.diskStorage({
 		destination: function (req, file, cb) {
 			cb(null, path); //lokasih penyimpan file

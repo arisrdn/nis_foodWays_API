@@ -1,5 +1,6 @@
 const { Product, Restaurant } = require("../../models/");
 const Joi = require("joi");
+const URL = process.env.URL;
 
 exports.getProducts = async (req, res) => {
 	try {
@@ -22,6 +23,7 @@ exports.getProducts = async (req, res) => {
 			message: "Produccts Successfully Get",
 			data: {
 				products,
+				url: URL,
 			},
 		});
 	} catch (err) {
@@ -58,6 +60,7 @@ exports.getDetailProduct = async (req, res) => {
 			message: "Product Successfully Get",
 			data: {
 				product,
+				url: URL,
 			},
 		});
 	} catch (err) {
@@ -81,7 +84,7 @@ exports.getProductsRestaurant = async (req, res) => {
 			},
 		});
 
-		if (products.id == undefined) {
+		if (!products) {
 			return res.status(400).send({
 				status: "error",
 				message: "product doesn't exist",
@@ -92,6 +95,7 @@ exports.getProductsRestaurant = async (req, res) => {
 			message: "Products Succesfully Get",
 			data: {
 				products,
+				url: URL,
 			},
 		});
 	} catch (err) {
@@ -134,7 +138,7 @@ exports.createProduct = async (req, res) => {
 			},
 		});
 		if (!restaurant)
-			return res.send({
+			return res.status(400).send({
 				status: "Create Failed",
 				message: `You don't have a restaurant`,
 			});
@@ -168,6 +172,7 @@ exports.createProduct = async (req, res) => {
 			message: "Product Successfully Added",
 			data: {
 				product,
+				url: URL,
 			},
 		});
 	} catch (err) {

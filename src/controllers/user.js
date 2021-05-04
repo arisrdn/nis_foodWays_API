@@ -1,10 +1,19 @@
-const { User } = require("../../models/");
+const { User, Restaurant, Transaction, Order } = require("../../models/");
 const Joi = require("joi");
-// const { login } = require("./auth");
+const URL = process.env.URL;
 
 exports.getUsers = async (req, res) => {
 	try {
 		const users = await User.findAll({
+			include: [
+				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId"],
+					},
+				},
+			],
 			attributes: {
 				exclude: ["createdAt", "updatedAt", "password"],
 			},
@@ -14,6 +23,7 @@ exports.getUsers = async (req, res) => {
 			message: "Users Succesfully Get",
 			data: {
 				users,
+				url: URL,
 			},
 		});
 	} catch (err) {
@@ -28,10 +38,43 @@ exports.getUsers = async (req, res) => {
 exports.getDetailUser = async (req, res) => {
 	try {
 		console.log("chek id", req.userId);
-		const users = await User.findOne({
+		const user = await User.findOne({
 			where: {
 				id: req.userId.id,
 			},
+			include: [
+				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId"],
+					},
+				},
+				{
+					model: Transaction,
+					as: "transactions",
+					attributes: {
+						exclude: ["createdAt", "userId"],
+					},
+					order: ["updatedAt", "DESC"],
+					include: [
+						{
+							model: Restaurant,
+							as: "restaurant",
+							attributes: {
+								exclude: ["createdAt", "userId"],
+							},
+						},
+						{
+							model: Order,
+							as: "orders",
+							attributes: {
+								exclude: ["createdAt", "userId"],
+							},
+						},
+					],
+				},
+			],
 			attributes: {
 				exclude: ["createdAt", "updatedAt", "password"],
 			},
@@ -40,7 +83,8 @@ exports.getDetailUser = async (req, res) => {
 			status: "success",
 			message: "Users Succesfully Get",
 			data: {
-				users,
+				user,
+				url: URL,
 			},
 		});
 	} catch (err) {
@@ -88,6 +132,15 @@ exports.updateUser = async (req, res) => {
 			where: {
 				id: req.userId.id,
 			},
+			include: [
+				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId"],
+					},
+				},
+			],
 			attributes: {
 				exclude: ["createdAt", "updatedAt", "password", "id"],
 			},
@@ -105,6 +158,7 @@ exports.updateUser = async (req, res) => {
 			message: "User Succesfully Updated",
 			data: {
 				user,
+				url: URL,
 			},
 		});
 	} catch (err) {

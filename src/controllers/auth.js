@@ -1,12 +1,14 @@
-const { User } = require("../../models");
+const { User, Restaurant } = require("../../models");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const Joi = require("joi");
 const dotenv = require("dotenv");
 dotenv.config();
+const URL = process.env.URL;
 
 exports.login = async (req, res) => {
 	try {
+		console.log(".isi", req.body);
 		const { email, password } = req.body;
 
 		// console.log(req);
@@ -60,16 +62,34 @@ exports.login = async (req, res) => {
 		);
 		// console.log(token);
 
+		const userdata = await User.findOne({
+			where: {
+				id: checkEmail.id,
+			},
+			include: [
+				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId"],
+					},
+				},
+			],
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "role", "password", "gender", "id"],
+			},
+		});
+		const userarray = JSON.stringify(userdata);
+		const user = JSON.parse(userarray);
+		user.token = token;
+		user.image = URL + user.image;
+		// console.log("token", user, "sasasa", user.token);
+
 		res.status(200).send({
 			status: "success",
 			message: "Login Success",
 			data: {
-				user: {
-					fullName: checkEmail.fullName,
-					email: checkEmail.email,
-					role: checkEmail.role,
-					token,
-				},
+				user,
 			},
 		});
 	} catch (err) {
@@ -92,7 +112,6 @@ exports.register = async (req, res) => {
 			fullName: Joi.string().required(),
 			gender: Joi.string().required(),
 			phone: Joi.string().required(),
-			role: Joi.string().required(),
 		});
 
 		const { error } = schema.validate(req.body);
@@ -118,35 +137,99 @@ exports.register = async (req, res) => {
 		const hashedPassword = await bcrypt.hash(password, hashStrength);
 		// console.log("secret kode2", process.env.SECRET_KEY);
 
-		const user = await User.create({
+		const userCreate = await User.create({
 			...req.body,
 			password: hashedPassword,
+			role: "USER",
 		});
 
 		const secretKey = process.env.SECRET_KEY;
 
 		const token = jwt.sign(
 			{
-				id: user.id,
+				id: userCreate.id,
 			},
 			secretKey
 		);
+		const userdata = await User.findOne({
+			where: {
+				id: userCreate.id,
+			},
+			include: [
+				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId"],
+					},
+				},
+			],
+			attributes: {
+				exclude: ["createdAt", "updatedAt", "role", "password", "gender", "id"],
+			},
+		});
+		const userarray = JSON.stringify(userdata);
+		const user = JSON.parse(userarray);
+		user.token = token;
+		user.image = URL + user.image;
 
 		res.send({
 			status: "success",
 			message: "User Succesfully Registered",
 			data: {
-				user: {
-					name: user.name,
-					email: user.email,
-					token,
-				},
+				user,
 			},
 		});
 	} catch (err) {
 		console.log(err);
 		res.status(500).send({
 			status: "error",
+			message: "Server Error",
+		});
+	}
+};
+
+exports.checkAuth = async (req, res) => {
+	try {
+		console.log("userid=", req.userId.id);
+		const user = await User.findOne({
+			where: {
+				id: req.userId.id,
+			},
+			include: [
+				{
+					model: Restaurant,
+					as: "restaurant",
+					attributes: {
+						exclude: ["createdAt", "updatedAt", "userId"],
+					},
+				},
+			],
+			attributes: {
+				exclude: [
+					"createdAt",
+					"updatedAt",
+					"role",
+					"password",
+					"gender",
+					"id",
+					"image",
+					"phone",
+					"location",
+				],
+			},
+		});
+		res.send({
+			status: "success",
+			message: "User Valid",
+			data: {
+				user,
+				url: URL,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).send({
 			message: "Server Error",
 		});
 	}

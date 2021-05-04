@@ -1,6 +1,8 @@
-const { Restaurant, Product, User } = require("../../models/");
-const { Op } = require("sequelize");
+const { Restaurant, Product, User, Transaction } = require("../../models/");
+const { Op, Sequelize } = require("sequelize");
 const Joi = require("joi");
+const URL = process.env.URL;
+const URL2 = process.env.URL;
 
 exports.createRestaurant = async (req, res) => {
 	try {
@@ -11,9 +13,9 @@ exports.createRestaurant = async (req, res) => {
 		});
 
 		if (check)
-			return res.send({
+			return res.status(400).send({
 				status: "Create Failed",
-				message: `can only create a restaurant once`,
+				message: `you already have a restaurant`,
 			});
 		if (
 			req.files.imageFile == undefined ||
@@ -178,7 +180,7 @@ exports.getRestaurants = async (req, res) => {
 			userId = req.userId.id;
 		}
 
-		const restaurans = await Restaurant.findAll({
+		const restaurants = await Restaurant.findAll({
 			where: {
 				userId: {
 					[Op.ne]: userId,
@@ -207,9 +209,10 @@ exports.getRestaurants = async (req, res) => {
 		});
 		res.send({
 			status: "success",
-			message: "Restaurans Succesfully Get",
+			message: "restaurants Succesfully Get",
 			data: {
-				restaurans,
+				restaurants,
+				url: URL,
 			},
 		});
 	} catch (err) {
@@ -235,6 +238,13 @@ exports.getRestaurant = async (req, res) => {
 						exclude: ["createdAt", "updatedAt"],
 					},
 				},
+				{
+					model: Transaction,
+					as: "transactions",
+					attributes: {
+						exclude: ["createdAt", "updatedAt"],
+					},
+				},
 			],
 			attributes: {
 				exclude: ["createdAt", "updatedAt", "userId"],
@@ -245,6 +255,8 @@ exports.getRestaurant = async (req, res) => {
 			message: "Restaurant Succesfully Get",
 			data: {
 				restaurant,
+				url: URL,
+				url2: URL2,
 			},
 		});
 	} catch (err) {
@@ -293,25 +305,56 @@ exports.getDetailRestaurant = async (req, res) => {
 
 exports.getRestaurantFav = async (req, res) => {
 	try {
-		const restaurant = await Restaurant.findAll({
-			include: [
-				{
-					model: Product,
-					as: "products",
-					attributes: {
-						exclude: ["createdAt", "updatedAt"],
-					},
-				},
+		// const restaurantsData = await Restaurant.findAll({
+		// 	include: [
+		// 		{
+		// 			model: Transaction,
+		// 			as: "transactions",
+		// 			attributes: {
+		// 				exclude: ["createdAt", "updatedAt"],
+		// 			},
+		// 		},
+		// 	],
+		// 	attributes: {
+		// 		exclude: ["createdAt", "updatedAt", "userId"],
+		// 	},
+		// });
+		// const restaurantsString = JSON.stringify(restaurantsData);
+		// const restaurantsObject = JSON.parse(restaurantsString);
+		// const restaurants = restaurantsObject.map((product) => ({
+		// 	...product,
+		// 	transactions: product.transactions.length,
+		// }));
+
+		const restaurantsData = await Restaurant.findAll({
+			attributes: [
+				"Restaurant.id",
+				"Restaurant.name",
+				"Restaurant.image",
+				"Restaurant.location",
+				[
+					Sequelize.literal(
+						"(SELECT COUNT(*) FROM Transactions WHERE Transactions.restaurantId = Restaurant.id)"
+					),
+					"transactionCount",
+				],
 			],
-			attributes: {
-				exclude: ["createdAt", "updatedAt", "userId"],
-			},
+			order: [[Sequelize.literal("transactionCount"), "DESC"]],
+			raw: true,
+			limit: 4,
 		});
+		const restaurantsString = JSON.stringify(restaurantsData);
+		const restaurantsObject = JSON.parse(restaurantsString);
+		const restaurants = restaurantsObject.map((product) => ({
+			...product,
+			image: URL + product.image,
+		}));
 		res.send({
 			status: "success",
-			message: "Restaurant Succesfully Get",
+			message: "Restaurant Favorit Succesfully Get",
 			data: {
-				product,
+				restaurants,
+				// chek,
 			},
 		});
 	} catch (err) {
